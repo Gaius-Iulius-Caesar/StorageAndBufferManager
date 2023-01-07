@@ -3,7 +3,6 @@ package edu.ustc.dataStorage;
 import edu.ustc.buffer.BFrame;
 import edu.ustc.common.Constants;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -38,17 +37,18 @@ public class DSMgr {
     public BFrame readPage(int page_id) throws IOException {
         currentFile.seek(page_id * Constants.FRAMESIZE);
         byte[] buffer = new byte[Constants.FRAMESIZE];
-        currentFile.read(buffer, 0, 4096);
+        currentFile.read(buffer, 0, Constants.FRAMESIZE);
         BFrame temp = new BFrame(buffer);
         return temp;
     }
 
     public int writePage(int page_id, BFrame frm) throws IOException {
-        currentFile.seek(page_id * Constants.FRAMESIZE);
+        currentFile.seek((long) page_id * Constants.FRAMESIZE);
         currentFile.write(Arrays.toString(frm.field).getBytes(), 0, Constants.FRAMESIZE);
         return Constants.FRAMESIZE;
     }
 
+    // 多余的函数，可以直接使用RandomAccessFile的seek函数
     public int seek(int offset, int pos) {
         return 0;
     }
@@ -58,17 +58,18 @@ public class DSMgr {
     }
 
     public void incNumPages() {
+        numPages += 1;
     }
 
     public int getNumPages() {
-        return 0;
+        return this.numPages;
     }
 
     public void setUse(int index, int use_bit) {
-
+        pages[index] = use_bit;
     }
 
     public int getUse(int index) {
-        return 0;
+        return pages[index];
     }
 }

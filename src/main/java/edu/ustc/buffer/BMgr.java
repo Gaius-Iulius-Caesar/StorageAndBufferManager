@@ -7,6 +7,7 @@ import edu.ustc.dataStorage.DSMgr;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author Wu Sai
@@ -43,7 +44,16 @@ public class BMgr {
     }
 
     public int numFreeFrames() {
-        return 0;
+        int i = 0;
+        while ((ftop[i] != -1) && (i<Constants.DEFBUFSIZE)) {
+            ++i;
+        }
+        if (i == Constants.DEFBUFSIZE) {
+            return -1;
+        }
+        else{
+            return i;
+        }
     }
 
     // 内部函数
@@ -112,7 +122,7 @@ public class BMgr {
     }
 
     public void printFrame(int frame_id) {
-
+        System.out.println(buf[frame_id].field);
     }
 
 }
