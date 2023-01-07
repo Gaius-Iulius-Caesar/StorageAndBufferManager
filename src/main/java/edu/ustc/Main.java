@@ -1,4 +1,4 @@
-package org.example;
+package edu.ustc;
 
 public class Main {
     public static void main(String[] args) {
