@@ -3,7 +3,11 @@ package edu.ustc.dataStorage;
 import edu.ustc.buffer.BFrame;
 import edu.ustc.common.Constants;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 /**
  * @author Wu Sai
@@ -11,24 +15,38 @@ import java.io.RandomAccessFile;
  * @description 定义数据存储管理器结构
  **/
 public class DSMgr {
-    private RandomAccessFile currentFile;
+    private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
     private int numPages;
     private int[] pages = new int[Constants.MAXPAGES];
 
-    public int openFile(String fileName) {
-        return 0;
+    public int openFile(String fileName) throws FileNotFoundException {
+        this.currentFile = new RandomAccessFile(fileName, "rw");
+        return 1;
     }
 
     public int closeFile() {
-        return 0;
+        try {
+            this.currentFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        this.currentFile = null;
+        return 1;
     }
 
-    public BFrame readPage(int page_id) {
-        return new BFrame();
+    public BFrame readPage(int page_id) throws IOException {
+        currentFile.seek(page_id * Constants.FRAMESIZE);
+        byte[] buffer = new byte[Constants.FRAMESIZE];
+        currentFile.read(buffer, 0, 4096);
+        BFrame temp = new BFrame(buffer);
+        return temp;
     }
 
-    public int writePage(int frame_id, BFrame frm) {
-        return 0;
+    public int writePage(int page_id, BFrame frm) throws IOException {
+        currentFile.seek(page_id * Constants.FRAMESIZE);
+        currentFile.write(Arrays.toString(frm.field).getBytes(), 0, Constants.FRAMESIZE);
+        return Constants.FRAMESIZE;
     }
 
     public int seek(int offset, int pos) {

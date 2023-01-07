@@ -11,13 +11,11 @@ import java.util.Arrays;
  * @description 定义缓冲帧结构
  **/
 public class BFrame {
-    char[] field = new char[Constants.FRAMESIZE];
+    public char[] field = new char[Constants.FRAMESIZE];
 
     public BFrame(byte[] buffer) {
         super();
         this.field = Arrays.toString(buffer).toCharArray();
     }
-    public BFrame() {
 
-    }
 }
