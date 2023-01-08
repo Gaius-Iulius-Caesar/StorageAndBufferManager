@@ -1,11 +1,13 @@
 package edu.ustc.buffer;
 
 
+import edu.ustc.Main;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author Wu Sai
@@ -92,7 +94,12 @@ public class BMgr {
             newLRUEle.setPre_LRUEle(this.mru);
             newLRUEle.setPost_LRUEle(null);
             this.mru = newLRUEle;
-
+            // 读入调入的页面
+            try {
+                this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
+            } catch (IOException e) {
+                System.out.println("fixPage异常: 读入调入的页面异常");
+            }
             return newBCB.frame_id;
         } else {
             // 在buffer中
