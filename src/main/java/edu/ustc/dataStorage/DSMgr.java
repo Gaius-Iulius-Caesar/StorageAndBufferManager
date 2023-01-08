@@ -2,6 +2,7 @@ package edu.ustc.dataStorage;
 
 import edu.ustc.buffer.BFrame;
 import edu.ustc.common.Constants;
+import lombok.Data;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,16 +14,16 @@ import java.util.Arrays;
  * @date 2023.01.07
  * @description 定义数据存储管理器结构
  **/
+@Data
 public class DSMgr {
     private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
     private int numPages;
-    private final int[] pages;
+    private final int[] pages= new int[Constants.MAXPAGES];
 
     // 构造函数
     public DSMgr() {
         super();
-        currentFile = null;
-        this.pages = new int[Constants.MAXPAGES];
+        this.currentFile = null;
         for (int i = 0; i < Constants.MAXPAGES; i++) {
             this.pages[i] = 0; // 初始状态下默认user_bit=0，即未被使用
         }
@@ -89,7 +90,7 @@ public class DSMgr {
         numPages += 1;
     }
 
-    /**
+    /** 使用了@Data注解之后此函数冗余
      * @return 页面计数器
      */
     public int getNumPages() {
