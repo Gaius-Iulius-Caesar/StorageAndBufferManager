@@ -16,14 +16,15 @@ import java.util.Arrays;
 public class DSMgr {
     private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
     private int numPages;
-    private int[] pages = new int[Constants.MAXPAGES];
+    private final int[] pages;
 
     // 构造函数
     public DSMgr() {
         super();
         currentFile = null;
+        this.pages = new int[Constants.MAXPAGES];
         for (int i = 0; i < Constants.MAXPAGES; i++) {
-            pages[i] = 0; // 初始状态下默认user_bit=0，即未被使用
+            this.pages[i] = 0; // 初始状态下默认user_bit=0，即未被使用
         }
     }
 
@@ -104,7 +105,7 @@ public class DSMgr {
      * fixNewPage 函数首先检查这个数组的 use_bit 是否为零。如果找到一个，就重用这个页面。如果没有，则分配新的页面。
      */
     public void setUse(int page_id, int use_bit) {
-        pages[page_id] = use_bit;
+        this.pages[page_id] = use_bit;
     }
 
     /**
@@ -112,6 +113,6 @@ public class DSMgr {
      * @return 对应 page_id 的当前 use_bit。
      */
     public int getUse(int page_id) {
-        return pages[page_id];
+        return this.pages[page_id];
     }
 }
