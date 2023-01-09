@@ -20,7 +20,7 @@ public class LRU {
             this.lru.setPre_LRUEle(null);
         } else if (this.mru != null && this.mru.getBcb().frame_id == frame_id) {
             this.mru = this.mru.getPre_LRUEle();
-            this.lru.setPost_LRUEle(null);
+            this.mru.setPost_LRUEle(null);
         }
         // 不在两端则从lru端开始查找
         LRUEle p = this.lru;

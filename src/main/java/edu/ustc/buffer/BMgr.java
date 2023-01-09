@@ -1,11 +1,13 @@
 package edu.ustc.buffer;
 
 
+import com.sun.prism.shader.Solid_TextureYV12_AlphaTest_Loader;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.SortedMap;
 
 /**
  * @author Wu Sai
@@ -23,7 +25,7 @@ public class BMgr {
     // LRU双链表
     private final LRU lRU = new LRU();
     // 命中计数器
-    private int HitCounter = 0;
+    public static int HitCounter = 0;
 
 
     // 构造函数
@@ -35,6 +37,11 @@ public class BMgr {
         }
         if (this.dSMgr.openFile("data.dbf") == 0)
             System.out.println("文件打开异常");
+    }
+
+    // 缓冲区关闭之前应关闭文件
+    protected void finalize() {
+        dSMgr.closeFile();
     }
 
     // 接口函数
@@ -91,7 +98,7 @@ public class BMgr {
             return newBCB.frame_id;
         } else {
             // 在buffer中命中，计数器增加
-            this.HitCounter++;
+            HitCounter++;
             // 修改LRU链表
             LRUEle p = this.getLRUEle(bcb.frame_id);
             if (p == null)
@@ -145,7 +152,7 @@ public class BMgr {
      */
     public int numFreeFrames() {
         int i = 0;
-        while ((ftop[i] != -1) && (i < Constants.DEFBUFSIZE)) {
+        while ((i < Constants.DEFBUFSIZE) && (ftop[i] != -1)) {
             ++i;
         }
         if (i == Constants.DEFBUFSIZE) {
@@ -162,8 +169,9 @@ public class BMgr {
      * @description 使用LRU策略找到可以被替换的帧号（注意此帧可能为空）
      */
     public int selectVictim() {
-        if (this.numFreeFrames() != -1)
-            return numFreeFrames();
+        int vFrame_id = this.numFreeFrames();
+        if (vFrame_id != -1)
+            return vFrame_id;
         else {
             LRUEle p = this.lRU.getLru();
             while (p.getBcb().count != 0)
@@ -237,7 +245,7 @@ public class BMgr {
 
     /**
      * @throws IOException 文件写异常
-     * @description 写出缓冲区中可能需要写入的任何页面。如果 dirty_bit 为 1，它只会将页面写出到文件中
+     * @description 写出缓冲区中可能需要写回的任何页面。如果 dirty_bit 为 1，它只会将页面写出到文件中
      */
     public void writeDirtys() throws IOException {
         for (BCB bcb : ptof) {

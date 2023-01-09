@@ -22,8 +22,8 @@ public class DSMgr {
     private int numPages;
     private final int[] pages = new int[Constants.MAXPAGES];
     // IO计数器
-    private int ICounter = 0;
-    private int OCounter = 0;
+    public static int ICounter = 0;
+    public static int OCounter = 0;
 
     // 构造函数
     public DSMgr() {
@@ -72,7 +72,7 @@ public class DSMgr {
                 System.out.println("文件已读取到末尾");
 
             //计数器增加
-            this.ICounter++;
+            ICounter++;
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("文件读异常");
@@ -91,7 +91,7 @@ public class DSMgr {
             this.currentFile.write(Arrays.toString(frm.getField()).getBytes(), 0, Constants.FRAMESIZE);
 
             //计数器增加
-            this.OCounter++;
+            OCounter++;
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("文件写异常");
