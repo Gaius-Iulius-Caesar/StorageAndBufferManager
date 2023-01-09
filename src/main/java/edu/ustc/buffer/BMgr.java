@@ -3,6 +3,7 @@ package edu.ustc.buffer;
 
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -15,10 +16,14 @@ public class BMgr {
     // 哈希表
     private final int[] ftop = new int[Constants.DEFBUFSIZE];
     private final BCB[] ptof = new BCB[Constants.DEFBUFSIZE];
+    // 缓冲区
     private final BFrame[] buf = new BFrame[Constants.DEFBUFSIZE];
-    private final DSMgr dSMgr = new DSMgr(); // 需要用到DSMgr的方法
+    // 需要用到DSMgr的方法
+    private final DSMgr dSMgr = new DSMgr();
     // LRU双链表
-    private LRU lRU = new LRU();
+    private final LRU lRU = new LRU();
+    // 命中计数器
+    private int HitCounter = 0;
 
 
     // 构造函数
@@ -28,7 +33,7 @@ public class BMgr {
             this.ptof[i] = null;// 初始化BCB数组
             this.ftop[i] = -1;
         }
-        if (this.dSMgr.openFile("../data.dbf") == 0)
+        if (this.dSMgr.openFile("data.dbf") == 0)
             System.out.println("文件打开异常");
     }
 
@@ -36,7 +41,7 @@ public class BMgr {
 
     /**
      * @param page_id: 要调入的页号
-     * @param prot: 未使用
+     * @param prot:    未使用
      * @return frame_id
      * @description 该函数查看页面是否已经在缓冲区中，如果是，则返回相应的 frame_id。如果该页还没有驻留在缓冲区中，
      * 如果需要，它会选择一个牺牲页，并加载到所请求的页中。
@@ -47,33 +52,30 @@ public class BMgr {
             bcb = bcb.next;
         if (bcb == null) {
             // 不在buffer
-            // 获取替换的BCB
-            BCB vBCB = ptof[hash(ftop[this.selectVictim()])];
-            while (vBCB != null && vBCB.frame_id != this.selectVictim()) {
-                vBCB = vBCB.next;
-            }
-            if (vBCB == null) {
-                System.out.println("fixPage异常: selectVictim未找到对应的页帧");
-                return -1;
-            }
-            // 如果vBCB是脏页，则写回
-            if (vBCB.dirty == 1) {
-                try {
-                    dSMgr.writePage(vBCB.page_id, buf[vBCB.frame_id]);
-                } catch (IOException e) {
-                    System.out.println("fixPage异常:脏页写回文件异常");
-                }
-                this.unSetDirty(vBCB.frame_id);
-            }
-            // 移除LRUEle并修改两个hash表
-            this.removeBCB(vBCB, vBCB.page_id);
-            this.ftop[vBCB.frame_id] = -1;
-            this.removeLRUEle(vBCB.frame_id);
-            // 为调入的页面新建BCB并修改两个hash表
+            // 1. 获取替换的帧号
+            int vFrameId = this.selectVictim();
+            // 2. 新建BCB
             BCB newBCB = new BCB();
             newBCB.page_id = page_id;
-            newBCB.frame_id = vBCB.frame_id;
+            newBCB.frame_id = vFrameId;
             newBCB.count++;
+            // 3. 如果这个帧已被使用，则首先移除这个帧
+            if (ftop[vFrameId] != -1) {
+                // 3.1 找到这个帧原先的BCB
+                BCB vBCB = ptof[hash(ftop[vFrameId])];
+                while (vBCB != null && vBCB.frame_id != vFrameId) {
+                    vBCB = vBCB.next;
+                }
+                if (vBCB == null) {
+                    System.out.println("fixPage异常: selectVictim未找到有效的页帧");
+                    return -1;
+                }
+                // 3.2 移除这个帧对应的BCB、LRUEle，修改hash表
+                this.removeBCB(vBCB, vBCB.page_id);
+                this.removeLRUEle(vBCB.frame_id);
+                this.ftop[vBCB.frame_id] = -1;
+            }
+            //4. 加载新调入页面，即修改hash表和LRU链表
             this.ftop[newBCB.frame_id] = newBCB.page_id;
             BCB temp = this.ptof[hash(newBCB.page_id)];
             if (temp == null)
@@ -83,17 +85,13 @@ public class BMgr {
                     temp = temp.next;
                 temp.next = newBCB;
             }
-            // 为调入的页面新建LRUELe并修改链表
             this.lRU.addLRUEle(newBCB);
-            // 读入调入的页面
-            try {
-                this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
-            } catch (IOException e) {
-                System.out.println("fixPage异常: 读入待调入的页面异常");
-            }
+            // 5. 读入调入的页面
+            this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
             return newBCB.frame_id;
         } else {
-            // 在buffer中命中
+            // 在buffer中命中，计数器增加
+            this.HitCounter++;
             // 修改LRU链表
             LRUEle p = this.getLRUEle(bcb.frame_id);
             if (p == null)
@@ -178,19 +176,30 @@ public class BMgr {
         return page_id % Constants.DEFBUFSIZE;
     }
 
-    public void removeBCB(BCB ptr, int page_id) {
+    /**
+     * @param ptr:     要移除的BCB
+     * @param page_id: 要移除的页号
+     * @description 在移除时，还会将脏页写回。
+     * 由于使用了hash，单纯的页号并不能定位BCB，所以需要ptr和page_id两个参数
+     */
+    public void removeBCB(@NotNull BCB ptr, int page_id) {
         BCB bcb = ptof[hash(page_id)];
         if (bcb == null)
             return;
-        if (bcb == ptr)
+        if (bcb == ptr) {
             ptof[hash(page_id)] = bcb.next;
-        else {
-            while (bcb.next != ptr) {
-                if (bcb.next == null)
-                    return;
+        } else {
+            while (bcb.next != null && bcb.next != ptr)
                 bcb = bcb.next;
-            }
+            if (bcb.next == null)
+                System.out.println("removeBCB异常: 未找到指定的BCB");
             bcb.next = ptr.next;
+        }
+        ptr.next = null;
+        // 如果是脏页，需要写回
+        if (ptr.dirty == 1) {
+            dSMgr.writePage(page_id, buf[ptr.frame_id]);
+            this.unSetDirty(ptr.frame_id);
         }
     }
 

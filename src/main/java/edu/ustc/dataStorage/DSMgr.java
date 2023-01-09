@@ -1,5 +1,6 @@
 package edu.ustc.dataStorage;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import edu.ustc.buffer.BFrame;
 import edu.ustc.common.Constants;
 import lombok.Data;
@@ -20,6 +21,9 @@ public class DSMgr {
     private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
     private int numPages;
     private final int[] pages = new int[Constants.MAXPAGES];
+    // IO计数器
+    private int ICounter = 0;
+    private int OCounter = 0;
 
     // 构造函数
     public DSMgr() {
@@ -54,24 +58,44 @@ public class DSMgr {
     /**
      * @param page_id: 页号
      * @return 读取的页面内容
-     * @throws IOException 文件读异常
      */
-    public BFrame readPage(int page_id) throws IOException {
-        currentFile.seek((long) page_id * Constants.FRAMESIZE);
+    public BFrame readPage(int page_id) {
         byte[] buffer = new byte[Constants.FRAMESIZE];
-        currentFile.read(buffer, 0, Constants.FRAMESIZE);
+        try {
+            currentFile.seek((long) page_id * Constants.FRAMESIZE);
+            int length = currentFile.read(buffer, 0, Constants.FRAMESIZE);
+
+            // 读取特殊情况处理
+            if(length == 0)
+                System.out.println("未读取到任何内容");
+            else if (length == -1)
+                System.out.println("文件已读取到末尾");
+
+            //计数器增加
+            this.ICounter++;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("文件读异常");
+        }
         return new BFrame(buffer);
     }
 
     /**
      * @param page_id: 页号
-     * @param frm: 待写入的帧
+     * @param frm:     待写入的帧
      * @return 写入字节数
-     * @throws IOException 文件写异常
      */
-    public int writePage(int page_id, @NotNull BFrame frm) throws IOException {
-        this.currentFile.seek((long) page_id * Constants.FRAMESIZE);
-        this.currentFile.write(Arrays.toString(frm.getField()).getBytes(), 0, Constants.FRAMESIZE);
+    public int writePage(int page_id, @NotNull BFrame frm) {
+        try {
+            this.currentFile.seek((long) page_id * Constants.FRAMESIZE);
+            this.currentFile.write(Arrays.toString(frm.getField()).getBytes(), 0, Constants.FRAMESIZE);
+
+            //计数器增加
+            this.OCounter++;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("文件写异常");
+        }
         return Constants.FRAMESIZE;
     }
 
@@ -80,7 +104,7 @@ public class DSMgr {
      * 多余的函数，可以直接使用RandomAccessFile的seek函数
      *
      * @param offset: 偏移量
-     * @param pos: 坐标
+     * @param pos:    坐标
      * @return 结果代码
      */
     public int seek(int offset, int pos) {

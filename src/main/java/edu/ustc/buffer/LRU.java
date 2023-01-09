@@ -57,10 +57,12 @@ public class LRU {
         newLRUEle.setBcb(bcb);
         if (this.lru == null && this.mru == null)
             this.lru = this.mru = newLRUEle;
-        this.mru.setPost_LRUEle(newLRUEle);
-        newLRUEle.setPre_LRUEle(this.mru);
-        newLRUEle.setPost_LRUEle(null);
-        this.mru = newLRUEle;
+        else {
+            this.mru.setPost_LRUEle(newLRUEle);
+            newLRUEle.setPre_LRUEle(this.mru);
+            newLRUEle.setPost_LRUEle(null);
+            this.mru = newLRUEle;
+        }
     }
 
     /**
