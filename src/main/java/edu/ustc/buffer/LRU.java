@@ -11,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 @Data
 public class LRU {
-    public LRUEle lru;
-    public LRUEle mru;
+    private LRUEle lru;
+    private LRUEle mru;
 
     public void removeLRUEle(int frame_id) {
         // 处理在链表两端的特殊情况
