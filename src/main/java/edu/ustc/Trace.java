@@ -27,11 +27,13 @@ public class Trace {
     public int read(int page_id){
 //        bMgr.printFrame(bMgr.fixPage(page_id, 0));
         bMgr.fixPage(page_id, 0);
+        bMgr.unFixPage(page_id);
         return BMgr.HitCounter;
     }
 
     public int write(int page_id) {
         bMgr.setDirty(bMgr.fixPage(page_id, 0));
+        bMgr.unFixPage(page_id);
         return BMgr.HitCounter;
     }
 
@@ -50,7 +52,7 @@ public class Trace {
         for (String line : arrayList) {
             String[] temp_str2 = line.split(",");
             int operation = Integer.parseInt(temp_str2[0].toString());
-            int page_id = Integer.parseInt(temp_str2[1].toString());
+            int page_id = Integer.parseInt(temp_str2[1].toString()) - 1; // 文件中的页号从1开始
             if (operation == 0) {      // 读操作
                 this.read(page_id);
             } else {               //写操作

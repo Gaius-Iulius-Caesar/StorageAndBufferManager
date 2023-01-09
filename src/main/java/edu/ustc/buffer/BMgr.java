@@ -1,13 +1,11 @@
 package edu.ustc.buffer;
 
 
-import com.sun.prism.shader.Solid_TextureYV12_AlphaTest_Loader;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.SortedMap;
 
 /**
  * @author Wu Sai
@@ -174,9 +172,9 @@ public class BMgr {
             return vFrame_id;
         else {
             LRUEle p = this.lRU.getLru();
-            while (p.getBcb().count != 0)
-                p = p.getPost_LRUEle();
-            return p.getBcb().frame_id;
+            while (p.bcb.count != 0)
+                p = p.post_LRUEle;
+            return p.bcb.frame_id;
         }
     }
 
