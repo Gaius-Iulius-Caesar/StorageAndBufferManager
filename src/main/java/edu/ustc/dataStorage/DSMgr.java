@@ -3,6 +3,7 @@ package edu.ustc.dataStorage;
 import edu.ustc.buffer.BFrame;
 import edu.ustc.common.Constants;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -68,7 +69,7 @@ public class DSMgr {
      * @return 写入字节数
      * @throws IOException 文件写异常
      */
-    public int writePage(int page_id, BFrame frm) throws IOException {
+    public int writePage(int page_id, @NotNull BFrame frm) throws IOException {
         this.currentFile.seek((long) page_id * Constants.FRAMESIZE);
         this.currentFile.write(Arrays.toString(frm.getField()).getBytes(), 0, Constants.FRAMESIZE);
         return Constants.FRAMESIZE;

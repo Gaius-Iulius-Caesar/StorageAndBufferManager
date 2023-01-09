@@ -1,6 +1,7 @@
 package edu.ustc.buffer;
 
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Wu Sai
@@ -66,7 +67,7 @@ public class LRU {
      * @param lruEle: 要移动的LRUEle
      * @description 将一个LRU元素移动到mru端
      */
-    public void moveToMru(LRUEle lruEle) {
+    public void moveToMru(@NotNull LRUEle lruEle) {
         if(lruEle.getPost_LRUEle() == null)
             return; // 已经在mru端，无需处理
         else if (lruEle.getPre_LRUEle() == null) {
