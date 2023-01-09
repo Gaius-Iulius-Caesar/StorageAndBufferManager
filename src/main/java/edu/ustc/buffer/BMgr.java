@@ -46,7 +46,7 @@ public class BMgr {
 
     /**
      * @param page_id: 要调入的页号
-     * @param prot: 读写标志
+     * @param prot:    读写标志
      * @return frame_id
      * @description 该函数查看页面是否已经在缓冲区中，如果是，则返回相应的 frame_id。如果该页还没有驻留在缓冲区中，
      * 如果需要，它会选择一个牺牲页，并加载到所请求的页中。
@@ -92,7 +92,7 @@ public class BMgr {
             }
             this.lRU.addLRUEle(newBCB);
             // 5. 根据读写的不同修改缓冲区
-            if(prot == 0)
+            if (prot == 0)
                 // 对读操作，要读入调入的页面
                 this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
             else {
@@ -116,10 +116,11 @@ public class BMgr {
     /**
      * 由于实验只要求IO的统计，不涉及页面内容的具体读写，所以此函数实际上不会用到
      *
+     * @param prot: 读写标志
      * @return page_id
      * @description 分配一个未使用的新页面
      */
-    public int fixNewPage() {
+    public int fixNewPage(int prot) {
         // 磁盘已满
         if (dSMgr.getNumPages() == dSMgr.getPages().length)
             return -1;
@@ -127,7 +128,7 @@ public class BMgr {
             if (dSMgr.getPages()[page_id] == 0) {
                 dSMgr.setUse(page_id, Constants.MAXPAGES);// 简单起见默认整个页面都被使用了
                 dSMgr.incNumPages();
-                fixPage(page_id, 0);
+                fixPage(page_id, prot);
                 return page_id;
             }
         }

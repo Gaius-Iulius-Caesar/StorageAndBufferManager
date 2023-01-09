@@ -29,13 +29,23 @@ public class Trace {
         randomAccessFile.close();
     }
 
+    /**
+     * 本实验不考察具体读写
+     * @param page_id: 页号
+     * @description 调用缓冲区进行读操作
+     * bMgr.printFrame(bMgr.fixPage(page_id, 0));
+     */
     public void read(int page_id) {
-//        // 本实验不考察具体读写
-//        bMgr.printFrame(bMgr.fixPage(page_id, 0));
         bMgr.fixPage(page_id, 0);
         bMgr.unFixPage(page_id);
     }
 
+    /**
+     * 本实验不考察具体读写
+     * @param page_id: 页号
+     * @description 调用缓冲区进行写操作
+     * 此函数省略了向缓冲区写操作的代码
+     */
     public void write(int page_id) {
         bMgr.setDirty(bMgr.fixPage(page_id, 1));
         // 此处应有写入缓冲区代码，由于本实验不考察具体读写，故省略
