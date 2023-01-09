@@ -30,13 +30,15 @@ public class Trace {
     }
 
     public void read(int page_id) {
+//        // 本实验不考察具体读写
 //        bMgr.printFrame(bMgr.fixPage(page_id, 0));
         bMgr.fixPage(page_id, 0);
         bMgr.unFixPage(page_id);
     }
 
     public void write(int page_id) {
-        bMgr.setDirty(bMgr.fixPage(page_id, 0));
+        bMgr.setDirty(bMgr.fixPage(page_id, 1));
+        // 此处应有写入缓冲区代码，由于本实验不考察具体读写，故省略
         bMgr.unFixPage(page_id);
     }
 
@@ -48,7 +50,7 @@ public class Trace {
         // 读文件
         BufferedReader bufferReader = new BufferedReader(new FileReader("data-5w-50w-zipf.txt"));
         String temp_str;
-        ArrayList<String> arrayList = new ArrayList<String>();
+        ArrayList<String> arrayList = new ArrayList<>();
         while ((temp_str = bufferReader.readLine()) != null) {
             temp_str = temp_str.trim();
             if (temp_str.length() > 0)
@@ -59,8 +61,8 @@ public class Trace {
         //array拆分、识别并执行读写操作
         for (String line : arrayList) {
             String[] temp_str2 = line.split(",");
-            int operation = Integer.parseInt(temp_str2[0].toString());
-            int page_id = Integer.parseInt(temp_str2[1].toString()) - 1; // 文件中的页号从1开始
+            int operation = Integer.parseInt(temp_str2[0]);
+            int page_id = Integer.parseInt(temp_str2[1]) - 1; // 文件中的页号从1开始
             if (operation == 0) {      // 读操作
                 this.read(page_id);
             } else {               //写操作

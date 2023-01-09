@@ -46,7 +46,7 @@ public class BMgr {
 
     /**
      * @param page_id: 要调入的页号
-     * @param prot:    未使用
+     * @param prot: 读写标志
      * @return frame_id
      * @description 该函数查看页面是否已经在缓冲区中，如果是，则返回相应的 frame_id。如果该页还没有驻留在缓冲区中，
      * 如果需要，它会选择一个牺牲页，并加载到所请求的页中。
@@ -91,8 +91,14 @@ public class BMgr {
                 temp.next = newBCB;
             }
             this.lRU.addLRUEle(newBCB);
-            // 5. 读入调入的页面
-            this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
+            // 5. 根据读写的不同修改缓冲区
+            if(prot == 0)
+                // 对读操作，要读入调入的页面
+                this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
+            else {
+                // 对写操作，要分配一个缓冲区页帧
+                this.buf[newBCB.frame_id] = new BFrame(new byte[Constants.FRAMESIZE]);
+            }
             return newBCB.frame_id;
         } else {
             // 在buffer中命中，计数器增加
