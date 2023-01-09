@@ -48,6 +48,7 @@ public class Trace {
                 arrayList.add(temp_str);
         }
         bufferReader.close();
+
         //array拆分、识别并执行读写操作
         for (String line : arrayList) {
             String[] temp_str2 = line.split(",");
@@ -63,7 +64,7 @@ public class Trace {
         this.finish();
         // 统计数据
         this.HitRate = (double)BMgr.HitCounter / arrayList.size();
-        this.IOCounter = DSMgr.OCounter + DSMgr.ICounter;
+        this.IOCounter = DSMgr.ICounter + DSMgr.OCounter;
     }
 
 

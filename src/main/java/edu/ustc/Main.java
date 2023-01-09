@@ -1,9 +1,5 @@
 package edu.ustc;
 
-import edu.ustc.buffer.BMgr;
-
-import javax.imageio.IIOException;
-import javax.management.openmbean.TabularType;
 import java.io.IOException;
 
 public class Main {
