@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class DSMgr {
     private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
     private int numPages;
-    private final int[] pages= new int[Constants.MAXPAGES];
+    private final int[] pages = new int[Constants.MAXPAGES];
 
     // 构造函数
     public DSMgr() {
@@ -64,17 +64,24 @@ public class DSMgr {
 
     /**
      * @param page_id: 页号
-     * @param frm: 待写入的帧内容
+     * @param frm: 待写入的帧
      * @return 写入字节数
      * @throws IOException 文件写异常
      */
     public int writePage(int page_id, BFrame frm) throws IOException {
         this.currentFile.seek((long) page_id * Constants.FRAMESIZE);
-        this.currentFile.write(Arrays.toString(frm.field).getBytes(), 0, Constants.FRAMESIZE);
+        this.currentFile.write(Arrays.toString(frm.getField()).getBytes(), 0, Constants.FRAMESIZE);
         return Constants.FRAMESIZE;
     }
 
-    // 多余的函数，可以直接使用RandomAccessFile的seek函数
+
+    /**
+     * 多余的函数，可以直接使用RandomAccessFile的seek函数
+     *
+     * @param offset: 偏移量
+     * @param pos: 坐标
+     * @return 结果代码
+     */
     public int seek(int offset, int pos) {
         return 0;
     }
@@ -90,7 +97,9 @@ public class DSMgr {
         numPages += 1;
     }
 
-    /** 使用了@Data注解之后此函数冗余
+    /**
+     * 使用了@Data注解之后此函数冗余
+     *
      * @return 页面计数器
      */
     public int getNumPages() {

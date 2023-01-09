@@ -1,13 +1,10 @@
 package edu.ustc.buffer;
 
 
-import edu.ustc.Main;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author Wu Sai
@@ -20,25 +17,26 @@ public class BMgr {
     private final BCB[] ptof = new BCB[Constants.DEFBUFSIZE];
     private final BFrame[] buf = new BFrame[Constants.DEFBUFSIZE];
     private final DSMgr dSMgr = new DSMgr(); // 需要用到DSMgr的方法
-    // LRU双链表的两个表头
-    private LRUEle lru;
-    private LRUEle mru;
+    // LRU双链表
+    private LRU lRU = new LRU();
+
 
     // 构造函数
-    public BMgr() throws FileNotFoundException {
+    public BMgr() {
         super();
         for (int i = 0; i < Constants.DEFBUFSIZE; i++) {
             this.ptof[i] = null;// 初始化BCB数组
             this.ftop[i] = -1;
         }
-        this.dSMgr.openFile("../data.dbf");
+        if (this.dSMgr.openFile("../data.dbf") == 0)
+            System.out.println("文件打开异常");
     }
 
     // 接口函数
 
     /**
      * @param page_id: 要调入的页号
-     * @param prot
+     * @param prot: 未使用
      * @return frame_id
      * @description 该函数查看页面是否已经在缓冲区中，如果是，则返回相应的 frame_id。如果该页还没有驻留在缓冲区中，
      * 如果需要，它会选择一个牺牲页，并加载到所请求的页中。
@@ -86,36 +84,22 @@ public class BMgr {
                 temp.next = newBCB;
             }
             // 为调入的页面新建LRUELe并修改链表
-            LRUEle newLRUEle = new LRUEle();
-            newLRUEle.setBcb(newBCB);
-            if(this.lru == null && this.mru == null)
-                this.lru = this.mru = newLRUEle;
-            this.mru.setPost_LRUEle(newLRUEle);
-            newLRUEle.setPre_LRUEle(this.mru);
-            newLRUEle.setPost_LRUEle(null);
-            this.mru = newLRUEle;
+            this.lRU.addLRUEle(newBCB);
             // 读入调入的页面
             try {
                 this.buf[newBCB.frame_id] = dSMgr.readPage(newBCB.page_id);
             } catch (IOException e) {
-                System.out.println("fixPage异常: 读入调入的页面异常");
+                System.out.println("fixPage异常: 读入待调入的页面异常");
             }
             return newBCB.frame_id;
         } else {
-            // 在buffer中
+            // 在buffer中命中
             // 修改LRU链表
             LRUEle p = this.getLRUEle(bcb.frame_id);
             if (p == null)
                 System.out.println("fixPage异常: 命中时LRU链表中未找到对应的页帧");
-            else if (p.getPost_LRUEle() != null) {
-                // 只有p不是mru时才需调整
-                p.getPre_LRUEle().setPost_LRUEle(p.getPost_LRUEle());
-                p.getPost_LRUEle().setPre_LRUEle(p.getPre_LRUEle());
-                this.mru.setPost_LRUEle(p);
-                p.setPre_LRUEle(this.mru);
-                p.setPost_LRUEle(null);
-                this.mru = p;
-            }
+            else this.lRU.moveToMru(p);
+            bcb.count++;
             return bcb.frame_id;
         }
     }
@@ -142,8 +126,6 @@ public class BMgr {
     }
 
     /**
-     * 由于实验只要求IO的统计，不涉及页面内容的具体读写，所以此函数实际上不会用到
-     *
      * @param page_id: 释放的页号
      * @return frame_id
      * @description 从缓冲区释放页面，即递减页面对应的BCB计数器
@@ -156,11 +138,13 @@ public class BMgr {
             return -1;
         else {
             bcb.count--;
-            ftop[bcb.frame_id] = -1;
             return bcb.frame_id;
         }
     }
 
+    /**
+     * @return 第一个可用的frame_id
+     */
     public int numFreeFrames() {
         int i = 0;
         while ((ftop[i] != -1) && (i < Constants.DEFBUFSIZE)) {
@@ -177,10 +161,17 @@ public class BMgr {
 
     /**
      * @return frame_id
-     * @description 使用LRU策略找到可以被替换的帧
+     * @description 使用LRU策略找到可以被替换的帧号（注意此帧可能为空）
      */
     public int selectVictim() {
-        return this.lru.getBcb().frame_id;
+        if (this.numFreeFrames() != -1)
+            return numFreeFrames();
+        else {
+            LRUEle p = this.lRU.getLru();
+            while (p.getBcb().count != 0)
+                p = p.getPost_LRUEle();
+            return p.getBcb().frame_id;
+        }
     }
 
     public int hash(int page_id) {
@@ -204,35 +195,11 @@ public class BMgr {
     }
 
     public void removeLRUEle(int frame_id) {
-        // 处理在链表两端的特殊情况
-        if(this.lru != null && this.lru.getBcb().frame_id == frame_id) {
-            this.lru = this.lru.getPost_LRUEle();
-            this.lru.setPre_LRUEle(null);
-        }
-        else if(this.mru != null && this.mru.getBcb().frame_id == frame_id) {
-            this.mru = this.mru.getPre_LRUEle();
-            this.lru.setPost_LRUEle(null);
-        }
-        // 不在两端则从lru端开始查找
-        LRUEle p = this.lru;
-        while (p != null && p.getBcb().frame_id != frame_id)
-            p = p.getPost_LRUEle();
-        if (p == null) {
-            System.out.println("removeLRUEle异常：未在LRU链表中找到相应的页帧");
-        } else {
-            p.getPre_LRUEle().setPost_LRUEle(p.getPost_LRUEle());
-            p.getPost_LRUEle().setPre_LRUEle(p.getPre_LRUEle());
-        }
+        this.lRU.removeLRUEle(frame_id);
     }
 
     public LRUEle getLRUEle(int frame_id) {
-        LRUEle p = this.mru;
-        while (p != null && p.getBcb().frame_id != frame_id)
-            p = p.getPre_LRUEle();
-        if (p == null) {
-            System.out.println("getLRUEle异常：未在LRU链表中找到相应的页帧");
-        }
-        return p;
+        return this.lRU.getLRUEle(frame_id);
     }
 
     public void setDirty(int frame_id) {
@@ -276,7 +243,7 @@ public class BMgr {
     }
 
     public void printFrame(int frame_id) {
-        System.out.println(buf[frame_id].field);
+        System.out.println(buf[frame_id].getField());
     }
 
 }
