@@ -61,8 +61,8 @@ public class DSMgr {
     public BFrame readPage(int page_id) {
         byte[] buffer = new byte[Constants.FRAMESIZE];
         try {
-            currentFile.seek((long) page_id * Constants.FRAMESIZE);
-            int length = currentFile.read(buffer, 0, Constants.FRAMESIZE);
+            this.currentFile.seek((long) page_id * Constants.FRAMESIZE);
+            int length = this.currentFile.read(buffer, 0, Constants.FRAMESIZE);
 
             // 读取特殊情况处理
             if(length == 0)
@@ -118,7 +118,7 @@ public class DSMgr {
      * @description 递增页面计数器
      */
     public void incNumPages() {
-        numPages += 1;
+        this.numPages += 1;
     }
 
     /**

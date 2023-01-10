@@ -33,13 +33,14 @@ public class BMgr {
             this.ptof[i] = null;// 初始化BCB数组
             this.ftop[i] = -1;
         }
-        if (this.dSMgr.openFile("data.dbf") == 0)
+        if (dSMgr.openFile("data.dbf") == 0)
             System.out.println("文件打开异常");
     }
 
     // 缓冲区关闭之前应关闭文件
     protected void finalize() {
-        dSMgr.closeFile();
+        if(dSMgr.closeFile() == 0)
+            System.out.println("文件关闭失败");;
     }
 
     // 接口函数
