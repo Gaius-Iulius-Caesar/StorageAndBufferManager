@@ -107,7 +107,13 @@ public class DSMgr {
      * @return 结果代码
      */
     public int seek(int offset, int pos) {
-        return 0;
+        try {
+            this.currentFile.seek(pos + offset);
+            return 1;
+        } catch (IOException e) {
+            System.out.println("文件seek异常");
+            return 0;
+        }
     }
 
     public RandomAccessFile getFile() {
