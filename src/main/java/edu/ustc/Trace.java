@@ -37,7 +37,8 @@ public class Trace {
      */
     public void read(int page_id) {
         bMgr.fixPage(page_id, 0);
-        bMgr.unFixPage(page_id);
+        if(bMgr.unFixPage(page_id) == -1)
+            System.out.println("read异常: 页面释放错误");;
     }
 
     /**
@@ -49,7 +50,8 @@ public class Trace {
     public void write(int page_id) {
         bMgr.setDirty(bMgr.fixPage(page_id, 1));
         // 此处应有写入缓冲区代码，由于本实验不考察具体读写，故省略
-        bMgr.unFixPage(page_id);
+        if(bMgr.unFixPage(page_id) == -1)
+            System.out.println("write异常: 页面释放错误");;
     }
 
     /**

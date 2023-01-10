@@ -39,8 +39,8 @@ public class BMgr {
 
     // 缓冲区关闭之前应关闭文件
     protected void finalize() {
-        if(dSMgr.closeFile() == 0)
-            System.out.println("文件关闭失败");;
+        if (dSMgr.closeFile() == 0)
+            System.out.println("文件关闭失败");
     }
 
     // 接口函数
@@ -53,9 +53,11 @@ public class BMgr {
      * 如果需要，它会选择一个牺牲页，并加载到所请求的页中。
      */
     public int fixPage(int page_id, int prot) {
+        // 首先查找该页是否在buffer中
         BCB bcb = ptof[hash(page_id)];
         while (bcb != null && bcb.page_id != page_id)
             bcb = bcb.next;
+
         if (bcb == null) {
             // 不在buffer
             // 1. 获取替换的帧号
@@ -115,21 +117,17 @@ public class BMgr {
     }
 
     /**
-     * 由于实验只要求IO的统计，不涉及页面内容的具体读写，所以此函数实际上不会用到
-     *
-     * @param prot: 读写标志
      * @return page_id
      * @description 分配一个未使用的新页面
      */
-    public int fixNewPage(int prot) {
-        // 磁盘已满
+    public int fixNewPage() {
+        // 如果磁盘已满
         if (dSMgr.getNumPages() == dSMgr.getPages().length)
             return -1;
         for (int page_id = 0; page_id < dSMgr.getPages().length; page_id++) {
             if (dSMgr.getPages()[page_id] == 0) {
                 dSMgr.setUse(page_id, Constants.MAXPAGES);// 简单起见默认整个页面都被使用了
                 dSMgr.incNumPages();
-                fixPage(page_id, prot);
                 return page_id;
             }
         }
@@ -212,7 +210,8 @@ public class BMgr {
         ptr.next = null;
         // 如果是脏页，需要写回
         if (ptr.dirty == 1) {
-            dSMgr.writePage(page_id, buf[ptr.frame_id]);
+            if (dSMgr.writePage(page_id, buf[ptr.frame_id]) != Constants.FRAMESIZE)
+                System.out.println("removeBCB异常: 页帧写入不完整");
             this.unSetDirty(ptr.frame_id);
         }
     }
@@ -257,7 +256,8 @@ public class BMgr {
         for (BCB bcb : ptof) {
             while (bcb != null) {
                 if (bcb.dirty == 1) {
-                    dSMgr.writePage(bcb.page_id, buf[bcb.frame_id]);
+                    if (dSMgr.writePage(bcb.page_id, buf[bcb.frame_id]) != Constants.FRAMESIZE)
+                        System.out.println("writeDirtys异常: 页帧写入不完整");
                     this.unSetDirty(bcb.frame_id);
                 }
                 bcb = bcb.next;

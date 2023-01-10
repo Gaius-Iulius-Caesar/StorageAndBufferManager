@@ -18,7 +18,7 @@ import java.util.Arrays;
 @Data
 public class DSMgr {
     private RandomAccessFile currentFile; // 使用RandomAccessFile是为了能够使用seek
-    private int numPages;
+    private int numPages = 0;
     private final int[] pages = new int[Constants.MAXPAGES];
     // IO计数器
     public static int ICounter = 0;

@@ -18,7 +18,7 @@ public class Main {
             trace.getStatistics();
             double endTime = System.currentTimeMillis();//终止时间
             double runTime = endTime - startTime;//运行时长
-            System.out.printf("总I/O次数: %-33s 命中率: %-34s 运行时间: %-33s\n", trace.getIOCounter(), trace.getHitRate(), runTime);
+            System.out.printf("总I/O次数: %s\t命中率: %s\t运行时间: %sms\n", trace.getIOCounter(), trace.getHitRate(), runTime);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("追踪程序异常");
