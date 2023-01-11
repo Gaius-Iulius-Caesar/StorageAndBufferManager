@@ -1,5 +1,6 @@
 package edu.ustc;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import edu.ustc.buffer.BMgr;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
@@ -31,18 +32,21 @@ public class Trace {
 
     /**
      * 本实验不考察具体读写
+     *
      * @param page_id: 页号
      * @description 调用缓冲区进行读操作
      * bMgr.printFrame(bMgr.fixPage(page_id, 0));
      */
     public void read(int page_id) {
         bMgr.fixPage(page_id, 0);
-        if(bMgr.unFixPage(page_id) == -1)
-            System.out.println("read异常: 页面释放错误");;
+        if (bMgr.unFixPage(page_id) == -1)
+            System.out.println("read异常: 页面释放错误");
+        ;
     }
 
     /**
      * 本实验不考察具体读写
+     *
      * @param page_id: 页号
      * @description 调用缓冲区进行写操作
      * 此函数省略了向缓冲区写操作的代码
@@ -50,28 +54,35 @@ public class Trace {
     public void write(int page_id) {
         bMgr.setDirty(bMgr.fixPage(page_id, 1));
         // 此处应有写入缓冲区代码，由于本实验不考察具体读写，故省略
-        if(bMgr.unFixPage(page_id) == -1)
-            System.out.println("write异常: 页面释放错误");;
+        if (bMgr.unFixPage(page_id) == -1)
+            System.out.println("write异常: 页面释放错误");
+        ;
     }
 
     /**
-     * @throws IOException 文件读写异常
      * @description 读取追踪文件并执行，统计IO次数、命中率
      */
-    public void getStatistics() throws IOException {
+    public void getStatistics() {
+        ArrayList<String> testArrayList = new ArrayList<>();
         // 读文件
-        BufferedReader bufferReader = new BufferedReader(new FileReader("data-5w-50w-zipf.txt"));
-        String temp_str;
-        ArrayList<String> arrayList = new ArrayList<>();
-        while ((temp_str = bufferReader.readLine()) != null) {
-            temp_str = temp_str.trim();
-            if (temp_str.length() > 0)
-                arrayList.add(temp_str);
+        try {
+            BufferedReader bufferReader = new BufferedReader(new FileReader("data-5w-50w-zipf.txt"));
+            String temp_str;
+            while ((temp_str = bufferReader.readLine()) != null) {
+                temp_str = temp_str.trim();
+                if (temp_str.length() > 0)
+                    testArrayList.add(temp_str);
+            }
+            bufferReader.close();
+            System.out.println("测试文件读取完成...");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("测试文件读取异常");
         }
-        bufferReader.close();
 
         //array拆分、识别并执行读写操作
-        for (String line : arrayList) {
+        System.out.println("开始运行追踪程序，请耐心等待...");
+        for (String line : testArrayList) {
             String[] temp_str2 = line.split(",");
             int operation = Integer.parseInt(temp_str2[0]);
             int page_id = Integer.parseInt(temp_str2[1]) - 1; // 文件中的页号从1开始
@@ -84,7 +95,7 @@ public class Trace {
         // 执行结束
         this.finish();
         // 统计数据
-        this.HitRate = (double) BMgr.HitCounter / arrayList.size();
+        this.HitRate = (double) BMgr.HitCounter / testArrayList.size();
         this.IOCounter = DSMgr.ICounter + DSMgr.OCounter;
     }
 
