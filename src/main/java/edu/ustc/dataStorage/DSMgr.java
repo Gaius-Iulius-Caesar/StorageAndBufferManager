@@ -65,7 +65,7 @@ public class DSMgr {
             int length = this.currentFile.read(buffer, 0, Constants.FRAMESIZE);
 
             // 读取特殊情况处理
-            if(length == 0)
+            if (length == 0)
                 System.out.println("未读取到任何内容");
             else if (length == -1)
                 System.out.println("文件已读取到末尾");
@@ -97,7 +97,6 @@ public class DSMgr {
         }
         return Constants.FRAMESIZE;
     }
-
 
     /**
      * 多余的函数，可以直接使用RandomAccessFile的seek函数

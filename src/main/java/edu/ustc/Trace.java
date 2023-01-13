@@ -1,6 +1,5 @@
 package edu.ustc;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import edu.ustc.buffer.BMgr;
 import edu.ustc.common.Constants;
 import edu.ustc.dataStorage.DSMgr;
@@ -41,7 +40,6 @@ public class Trace {
         bMgr.fixPage(page_id, 0);
         if (bMgr.unFixPage(page_id) == -1)
             System.out.println("read异常: 页面释放错误");
-        ;
     }
 
     /**
@@ -56,7 +54,7 @@ public class Trace {
         // 此处应有写入缓冲区代码，由于本实验不考察具体读写，故省略
         if (bMgr.unFixPage(page_id) == -1)
             System.out.println("write异常: 页面释放错误");
-        ;
+
     }
 
     /**
@@ -110,5 +108,4 @@ public class Trace {
             System.out.println("追踪程序关闭异常");
         }
     }
-
 }

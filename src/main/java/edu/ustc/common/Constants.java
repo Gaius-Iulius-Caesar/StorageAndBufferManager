@@ -10,5 +10,4 @@ public interface Constants {
     int FRAMESIZE = 4096;
     int DEFBUFSIZE = 1024;
     int MAXPAGES = 50000;
-
 }
